@@ -25,11 +25,32 @@ import net.lingala.zip4j.exception.ZipException;
  */
 public class FileProcessor {
     public static void main(String[] args) {
+    	if (args[0].equals("-output"))
+    		startProgram(args[1]);
+    	else if (args[0].equals("-help"))
+    		showHelp();
+    	else if (args[0].equals("-about"))
+    		showAbout();
+    	else
+    		System.out.println("Unknown command. use -help to show command list");
+    	}
+    
+    public static void showHelp(){
+    	System.out.println("-output: downloads a specific zip-file, unzip its CSV in \\backup\\ process the CSV, so all lines with ID over 6500000 are deleted and store it as <date>.csv.\n Paramter: Path to destination of download.");
+    	System.out.println("-about: shows information about the programm");
+    	System.out.println("-help: shows all available parameters");
+    	
+    }
+    
+    public static void showAbout() {
+    	System.out.println("© 2016, Sophie Siebert, https://github.com/MillahMau/Assignment-FTP-Downloader.git");
+    }
+    
+    public static void startProgram(String path){
     	String server = "beel.org";
         int port = 21;
         String user = "f00b72a7";
         String pass = "WtdyYSkrvzT5hErd";
-    	String path = args[0];
     	String file = "FTP File Downloader and Processor example file.zip";
     	
     	String backuppath = combine(path, "backup"); 
@@ -47,7 +68,6 @@ public class FileProcessor {
     	BufferedReader reader;
     	String line = null;
     	String newpath = path.substring(0, path.lastIndexOf('\\')) +"\\" +dateFormat.format(date) + ".csv";
-    	System.out.println(newpath);
     	FileWriter writer = null;
     	
     	try {
@@ -108,8 +128,6 @@ public class FileProcessor {
     public static void unzip(String source, String dest) {
     	System.out.println("unzipping file: " + source);
         try {
-        	 System.out.println("Source: "+source);
-        	 System.out.println("Dest: "+dest);
              ZipFile zipFile = new ZipFile(source);
              zipFile.extractAll(dest);
              System.out.println("unzipped file to: " + dest);
