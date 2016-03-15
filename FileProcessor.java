@@ -1,9 +1,16 @@
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -23,18 +30,56 @@ public class FileProcessor {
         String user = "f00b72a7";
         String pass = "WtdyYSkrvzT5hErd";
     	String path = args[0];
+    	String file = "FTP File Downloader and Processor example file.zip";
     	
     	String backuppath = combine(path, "backup"); 
-    	createBackupIfNecessary(backuppath);
+    	//createBackupIfNecessary(backuppath);
     	
-    	download(server, port, user, pass, backuppath);
-    	unzip("C:\\Users\\Sophie\\workspace\\FTP Downloader and Processor\\temp\\stuff.zip", "C:\\Users\\Sophie\\workspace\\FTP Downloader and Processor\\temp");
+    	//String downloaded = download(server, port, user, pass, backuppath, file);
+    	//unzip(combine(backuppath,downloaded), backuppath);
+    	deleteRowsInCSV("C:\\Users\\Sophie\\workspace\\FTP Downloader and Processor\\temp\\backup\\FTP File Downloader and Processor example file.csv");
+    }
+    
+    public static void deleteRowsInCSV(String path) {
+    	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    	Date date = new Date();
+    	
+    	BufferedReader reader;
+    	String line = null;
+    	String newpath = path.substring(0, path.lastIndexOf('\\')) +"\\" +dateFormat.format(date) + ".csv";
+    	System.out.println(newpath);
+    	FileWriter writer = null;
+    	
+    	try {
+			writer = new FileWriter(newpath, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+		try {
+			reader = new BufferedReader(new FileReader(path));
+			writer.append(reader.readLine());
+			writer.flush();
+			
+			while ((line = reader.readLine()) != null) {
+	    		String firstCell = line.split(";")[0];
+	    		if (Integer.parseInt(firstCell)<= 6500000){
+	    			writer.append(line + "\n");
+	    			writer.flush();
+	    		}
+	    	}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
     public static void createBackupIfNecessary(String path){
     	File dir = new File(path);
     	String name = dir.getName();
-    	System.out.println(name);
     	
     	if (!dir.exists()) {
     	    System.out.println("creating directory: " + name);
@@ -61,19 +106,22 @@ public class FileProcessor {
     }
     
     public static void unzip(String source, String dest) {
-    	System.out.println("unzipping file:" + source);
+    	System.out.println("unzipping file: " + source);
         try {
+        	 System.out.println("Source: "+source);
+        	 System.out.println("Dest: "+dest);
              ZipFile zipFile = new ZipFile(source);
              zipFile.extractAll(dest);
-             System.out.println("unzipped file to:" + dest);
+             System.out.println("unzipped file to: " + dest);
         } catch (ZipException e) {
             e.printStackTrace();
         }
     }
     
-    public static void download(String server, int port, String user, String pass, String path) {
+    public static String download(String server, int port, String user, String pass, String path, String file) {
     	System.out.println("downloading file...");
         FTPClient ftpClient = new FTPClient();
+        File downloadFile = new File(path,file);
         try {
  
             ftpClient.connect(server, port);
@@ -82,10 +130,8 @@ public class FileProcessor {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
  
             
-            String remoteFile = "FTP File Downloader and Processor example file.zip";
-            File downloadFile = new File(path + "/FTP File Downloader");
             OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile));
-            InputStream inputStream = ftpClient.retrieveFileStream(remoteFile);
+            InputStream inputStream = ftpClient.retrieveFileStream(file);
             byte[] bytesArray = new byte[4096];
             int bytesRead = -1;
             while ((bytesRead = inputStream.read(bytesArray)) != -1) {
@@ -94,7 +140,7 @@ public class FileProcessor {
  
             boolean success = ftpClient.completePendingCommand();
             if (success) {
-                System.out.println("File has been downloaded successfully.");
+                System.out.println("downloaded: "+ downloadFile.getName());
             }
             outputStream.close();
             inputStream.close();
@@ -112,5 +158,6 @@ public class FileProcessor {
                 ex.printStackTrace();
             }
         }
+        return downloadFile.getName();
     }
 }
