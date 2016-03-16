@@ -21,7 +21,10 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
- * @author Millah
+ * download a zip file from a ftp server. Unzip it and processes its containing CSV file
+ * 
+ * @author Millah 
+ * @since 2016
  */
 public class FileProcessor {
     public static void main(String[] args) {
@@ -53,11 +56,11 @@ public class FileProcessor {
     }
 
     public static void showHelp(){
-    	/*
+    	/**
     	 * prints all available commands of the program and an explanation
     	 */
     	System.out.println(
-    				"NAME: FileProcessor\n\n"
+                    "NAME: FileProcessor\n\n"
                 +   "\n"
                 +   "Parameters:\n"
                 +   "    -output FILE:\n"
@@ -81,7 +84,7 @@ public class FileProcessor {
 	    		+   "            FOLDER: path where the downloaded file should be stored\n"
 	    		+   "            FILE: file, which has to be downloaded\n\n"
 	    		+   "    -processCSV FILE\n"
-	    		+   "        copies a CSV. The new CSV is named <date.csv> and only have the rows\n"
+	    		+   "        copies a CSV. The new CSV is named <date>.csv and only have the rows\n"
 	    		+   "        copied, which first cells are bigger or equal than 6500000.\n"
 	    		+   "        Parameters:\n"
 	    		+   "            FILE: location of original CSV file\n\n"
@@ -96,14 +99,14 @@ public class FileProcessor {
     }
     
     public static void showAbout() {
-    	/*
+    	/**
     	 * prints about information
     	 */
-    	System.out.println("© 2016, Sophie Siebert, https://github.com/MillahMau/Assignment-FTP-Downloader.git");
+    	System.out.println("© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git");
     }
     
     public static void startProgram(String path){
-    	/*
+    	/**
     	 * starts the main Program:
     	 * creates a backup-folder, if not present.
     	 * downloads a file with
@@ -139,7 +142,7 @@ public class FileProcessor {
     }
     
     public static int printProgBar(int percent, int alreadyPrinted, int max){
-    	/*
+    	/**
     	 * prints # as a progress bar. if finished, print 100%.
     	 * 
     	 * @param percent the current percentage the progress file should display
@@ -168,7 +171,7 @@ public class FileProcessor {
     }
     
     public static void newCSVWithFilteredRows(String path) {
-    	/*
+    	/**
     	 * all rows, which cells in the first coloumn are lower than 6500000, are not copied to the new file
     	 * store the new file as <date>.csv in the same folder
     	 * 
@@ -215,16 +218,18 @@ public class FileProcessor {
     		} 
     		System.out.println("created new CSV: " + newpath);
     	}catch (FileNotFoundException e) {
-    		System.out.println("File not Found!");
+    		System.out.println("File not Found! Check file path");
     	} catch (NumberFormatException e) {
     		e.printStackTrace();
+    		System.out.println("Formatting Error in CSV. Check the content of the cells in the first coloumn");
     	} catch (IOException e) {
     		e.printStackTrace();
+    		System.out.println("Couldn't open/read/write file. Check permissions or if the file is already in use.");
     	}
     }
 
     public static void createDirectoryIfNotExist(String path){
-    	/*
+    	/**
     	 * creates a directory-folder, if not present.
     	 * 
     	 * @param path Path including to creating directory
@@ -242,14 +247,14 @@ public class FileProcessor {
     	        System.out.println("created directory: " + name);
     	    } 
     	    catch(SecurityException se){
-    	    	System.out.println("failed to create directory: " + name);
+    	    	System.out.println("Couldn't create the file. Check permissions.");
     	    	se.printStackTrace();
     	    }        
     	}
     }
     
     public static String combinePaths (String path1, String path2) {
-    	/*
+    	/**
     	 * combines to paths to one
     	 * 
     	 * @param path1 first part of path
@@ -259,7 +264,7 @@ public class FileProcessor {
     }
     
     public static void unzip(String source, String dest) {
-    	/*
+    	/**
     	 * unzips a file to a folder
     	 * 
     	 * @param source path to the zip file
@@ -272,12 +277,13 @@ public class FileProcessor {
              zipFile.extractAll(dest);
              System.out.println("unzipped files to: " + dest);
         } catch (ZipException e) {
+        	System.out.println("can't unzip file");
             e.printStackTrace();
         }
     }
     
     public static void download(String server, int port, String user, String pass, String path, String file) {
-    	/*
+    	/**
     	 * downloads a specific file from a ftp server
     	 * 
     	 * @param server the ftp server, where the files to download are
