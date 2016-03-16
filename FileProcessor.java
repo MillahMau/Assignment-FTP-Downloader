@@ -102,7 +102,7 @@ public class FileProcessor {
     	/**
     	 * prints about information
     	 */
-    	System.out.println("© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git");
+    	System.out.println("Â© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git");
     }
     
     public static void startProgram(String path){
@@ -156,7 +156,7 @@ public class FileProcessor {
     		percent = 100;
     	}
     	
-    	//compare already printed percent with wanted percent. Prints #, if wanted percent is reaches
+    	//compare already printed percent with wanted percent. Prints #, until wanted percent is reached
     	while (percent > (alreadyPrinted/max)*100){
         	System.out.print("#");
         	alreadyPrinted++;
