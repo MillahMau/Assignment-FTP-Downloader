@@ -26,42 +26,74 @@ import net.lingala.zip4j.exception.ZipException;
  */
 public class FileProcessor {
     public static void main(String[] args) {
-    	if (args[0].equals("-output"))
-    		startProgram(args[1]);
-    	else if (args[0].equals("-help"))
-    		showHelp();
-    	else if (args[0].equals("-about"))
-    		showAbout();
-    	else if (args[0].equals("-unzip"))
-    		unzip(args[1], args[2]);
-    	else if (args[0].equals("-download"))
-    		download(args[1],Integer.parseInt(args[2]),args[3],args[4],args[5],args[6]);
-    	else if (args[0].equals("-processCSV"))
-    		newCSVWithFilteredRows(args[1]);
-    	else if (args[0].equals("-createDir"))
-    		createDirectoryIfNotExist(args[1]);
-    	
-    	else
-    		System.out.println("Unknown command. use -help to show command list");
-    	}
-    
+    	switch(args[0]){ 
+        case "-output": 
+        	startProgram(args[1]);
+            break; 
+        case "-help": 
+        	showHelp();
+            break; 
+        case "-about": 
+        	showAbout();
+            break; 
+        case "-unzip": 
+        	unzip(args[1], args[2]); 
+            break; 
+        case "-download": 
+        	download(args[1],Integer.parseInt(args[2]),args[3],args[4],args[5],args[6]); 
+            break; 
+        case "-processCSV": 
+        	newCSVWithFilteredRows(args[1]); 
+            break; 
+        case "-createDir": 
+        	createDirectoryIfNotExist(args[1]);
+            break; 
+        default: 
+        	System.out.println("Unknown command. use -help to show command list"); 
+        } 
+    }
+
     public static void showHelp(){
     	/*
     	 * prints all available commands of the program and an explanation
     	 */
-    	System.out.println("-output: downloads a specific zip-file, unzip its CSV in /backup/ process the CSV, so all lines with ID over 6500000 are deleted and store it as <date>.csv.\n Paramter: Path to destination of download.");
-    	System.out.println();
-    	System.out.println("-unzip: unzips a file. Parameters: String location of zip-File; String destination of content of zip-file");
-    	System.out.println();
-    	System.out.println("-download: download a FTP file. Parameters: String server; Int port; String user; String password; String path to store; String file to download");
-    	System.out.println();
-    	System.out.println("-processCSV: creates a new CSV, with missing rows where first cell is lower than 650000. Parameters: String location of CSV file");
-    	System.out.println();
-    	System.out.println("-createDir: creates a directory if not exists. Parameter: String complete Path of directory");
-    	System.out.println();
-    	System.out.println("-about: shows information about the programm");
-    	System.out.println();
-    	System.out.println("-help: shows all available parameters");
+    	System.out.println(
+    				"NAME: FileProcessor\n\n"
+				+ 	"\n"
+    			+	"Parameters:\n"
+				+ 	"    -output FILE:\n"
+				+   "        downloads a specific zip-file, unzip its CSV in /backup/, copy the\n"
+    			+ 	"        CSV as <date>.csv. Only the lines where the ID in the first cell is\n"
+    			+	"        bigger or equal than 6500000 are copied and stored.\n"
+    			+ 	"        Paramters:\n"
+    			+ 	"            FILE: Path to destination of download.\n\n"
+    			+	"    -unzip FILE FOLDER:\n"
+    			+ 	"        unzips the file to the folder \n"
+    			+ 	"        Parameters: \n"
+    			+ 	"            FILE: Location of the zip file \n"
+    			+   "            FOLDER: Destination to extract the content of the zipp file to\n\n"
+	    		+   "    -download SERVER PORT USER PW FOLDER FILE\n"
+	    		+ 	"        download a FTP file.\n"
+	    		+   "        Parameters:\n"
+	    		+   "            SERVER: server\n"
+	    		+   "            PORT: port\n"
+	    		+   "            USER: username\n"
+	    		+   "            PW: password\n"
+	    		+   "            FOLDER: path where the downloaded file should be stored\n"
+	    		+   "            FILE: file, which has to be downloaded\n\n"
+	    		+   "    -processCSV FILE\n"
+	    		+   "        copies a CSV. The new CSV is named <date.csv> and only have the rows\n"
+	    		+   "        copied, which first cells are bigger or equal than 6500000.\n"
+	    		+   "        Parameters:\n"
+	    		+   "            FILE: location of original CSV file\n\n"
+	    		+	"    -createDir FOLDER:\n"
+	    		+   "        creates a directory if it does not exist, yet.\n"
+	    		+   "        Parameter:\n"
+	    		+   "            FOLDER: complete Path of directory\n\n"
+	    		+	"    -about:\n"
+	    		+   "        shows information about the programm\n\n"
+	    		+	"    -help:\n"
+	    		+   "        shows this help");
     }
     
     public static void showAbout() {
@@ -130,17 +162,19 @@ public class FileProcessor {
     		System.out.println(" 100%");
     	}
 		
-
     	return alreadyPrinted;
     }
     
     public static void newCSVWithFilteredRows(String path) {
     	/*
-    	 * all rows which cell in the first coloumn are lower than 6500000, are not copied to the new file
+    	 * all rows, which cells in the first coloumn are lower than 6500000, are not copied to the new file
     	 * store the new file as <date>.csv in the same folder
     	 * 
     	 * @param path path to original csv
     	 * 
+    	 * @exception FileNotFoundException
+    	 * @exception NumberFormatException
+    	 * @exception IOException
     	 */
     	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     	Date date = new Date();
@@ -187,6 +221,7 @@ public class FileProcessor {
     	 * creates a directory-folder, if not present.
     	 * 
     	 * @param path Path including to creating directory
+    	 * @exception SecurityException
     	 */
     	File dir = new File(path);
     	String name = dir.getName();
@@ -208,7 +243,7 @@ public class FileProcessor {
     
     public static String combinePaths (String path1, String path2) {
     	/*
-    	 * combines to pathes to one
+    	 * combines to paths to one
     	 * 
     	 * @param path1 first part of path
     	 * @param path2 second part of path
@@ -222,6 +257,7 @@ public class FileProcessor {
     	 * 
     	 * @param source path to the zip file
     	 * @param dest path where the files in the zip should be put
+    	 * @exception ZipException
     	 */
     	System.out.println("unzipping file: " + source);
         try {
@@ -242,6 +278,8 @@ public class FileProcessor {
     	 * @param pass password to log in
     	 * @param path the destination for the downloaded file
     	 * @param file the name of the downloaded file
+    	 * 
+    	 * @exception IOException
     	 */
     	System.out.println("downloading file...");
         FTPClient ftpClient = new FTPClient();
@@ -258,7 +296,7 @@ public class FileProcessor {
             FTPFile serverFile = ftpClient.mlistFile(file);
             long serverFileSize = serverFile.getSize();
             long localFileSize = 0;
-            //a variable for the progressbar printing
+            //a variable for the progress bar printing
             int alreadyPrinted = 0;
             
             //choose the maximal characters of the progress bar
