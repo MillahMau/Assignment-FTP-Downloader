@@ -102,7 +102,7 @@ public class FileProcessor {
     	/**
     	 * prints about information
     	 */
-    	System.out.println("© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git\n"
+    	System.out.println("Â© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git\n"
     			+ "     External Liberaries used:\n"
     			+ "         commons-net-3.0.1\n"
     			+ "         zip4j_1.3.2");
@@ -159,7 +159,7 @@ public class FileProcessor {
     		percent = 100;
     	}
     	
-    	//compare already printed percent with wanted percent. Prints #, if wanted percent is reaches
+    	//compare already printed percent with wanted percent. Prints #, until wanted percent is reached
     	while (percent > (alreadyPrinted/max)*100){
         	System.out.print("#");
         	alreadyPrinted++;
