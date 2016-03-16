@@ -14,6 +14,7 @@ import java.util.Date;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -68,7 +69,7 @@ public class FileProcessor {
     	 * store the new file as <date>.csv
     	 * 
     	 * 
-    	 * Parameter: destination path to download
+    	 * @param path destination path to download
     	 */
     	
     	//the given parameters for the connection
@@ -84,7 +85,28 @@ public class FileProcessor {
     	
     	download(server, port, user, pass, backupPath, file);
     	unzip(combinePaths(backupPath,file), backupPath);
-    	newcCSVWithFilteredRows("C:/Users/Sophie/workspace/FTP Downloader and Processor/temp/backup/FTP File Downloader and Processor example file.csv");
+    	newCSVWithFilteredRows("C:/Users/Sophie/workspace/FTP Downloader and Processor/temp/backup/FTP File Downloader and Processor example file.csv");
+    }
+    
+    public static int printProgBar(int percent, int alreadyPrinted){
+    	/*
+    	 * prints # as a progress bar. if finished, print 100%.
+    	 * 
+    	 * @param percent the current percentage the progress file should display
+    	 * @param alreadyPrinted counter, how much # are printed. has to be maintained
+    	 * @return the updated alreadyPrinted counter
+    	 */
+    	int max = 30;
+    	
+    	while (percent > (alreadyPrinted/max)*100){
+        	System.out.print("#");
+        	alreadyPrinted++;
+    	}
+    	
+    	if(percent>= 100){
+    		System.out.println(" 100%");
+    	}
+    	return alreadyPrinted;
     }
     
     public static void newCSVWithFilteredRows(String path) {
@@ -92,7 +114,7 @@ public class FileProcessor {
     	 * all rows which cell in the first coloumn are lower than 6500000, are not copied to the new file
     	 * store the new file as <date>.csv in the same folder
     	 * 
-    	 * Parameter: path to original csv
+    	 * @param path path to original csv
     	 * 
     	 */
     	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -115,7 +137,7 @@ public class FileProcessor {
     			String firstCell = line.split(";")[0];
     			
     			//if cell contains no pure number, copy complete row (for eg headers)
-        		if (!firstCell.matches("^[0-9]$")){
+        		if (!firstCell.matches("^[0-9]*$")){
         			writer.append(reader.readLine());
         			writer.flush();
         		}
@@ -124,9 +146,8 @@ public class FileProcessor {
     				writer.append(line + "\n");
     				writer.flush();
     			}
-        		
-        		System.out.println("created new CSV: " + newpath);
     		} 
+    		System.out.println("created new CSV: " + newpath);
     	}catch (FileNotFoundException e) {
     		System.out.println("File not Found!");
     	} catch (NumberFormatException e) {
@@ -140,7 +161,7 @@ public class FileProcessor {
     	/*
     	 * creates a directory-folder, if not present.
     	 * 
-    	 * Parameter: Path including to creating directory
+    	 * @param path Path including to creating directory
     	 */
     	File dir = new File(path);
     	String name = dir.getName();
@@ -164,7 +185,8 @@ public class FileProcessor {
     	/*
     	 * combines to pathes to one
     	 * 
-    	 * Parameters: Two Pathes to combine
+    	 * @param path1 first part of path
+    	 * @param path2 second part of path
     	 */
         return new File(path1, path2).getPath();
     }
@@ -173,9 +195,8 @@ public class FileProcessor {
     	/*
     	 * unzips a file
     	 * 
-    	 * Parameters: 
-    	 * source: path to the zip file
-    	 * dest: path where the files in the zip should be put
+    	 * @param source path to the zip file
+    	 * @param dest path where the files in the zip should be put
     	 */
     	System.out.println("unzipping file: " + source);
         try {
@@ -189,38 +210,44 @@ public class FileProcessor {
     
     public static void download(String server, int port, String user, String pass, String path, String file) {
     	/*
-    	 * downloads a file from a ftp server
+    	 * downloads a specific file from a ftp server
     	 * 
-    	 * Parameters:
-    	 * server: the ftp server, where the files to download are
-    	 * user: user name to log in
-    	 * pass: password to log in
-    	 * path: the destination of the downloaded file
-    	 * file: the local name of the downloaded file
+    	 * @param server the ftp server, where the files to download are
+    	 * @param user user name to log in
+    	 * @param pass password to log in
+    	 * @param path the destination for the downloaded file
+    	 * @param file the name of the downloaded file
     	 */
     	System.out.println("downloading file...");
         FTPClient ftpClient = new FTPClient();
         File downloadFile = new File(path,file);
         try {
  
-        	//conncet and login to FTP-Server
+        	//connect and login to FTP-Server
             ftpClient.connect(server, port);
             ftpClient.login(user, pass);
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             
+            FTPFile serverFile = ftpClient.mlistFile(file);
+            long serverFileSize = serverFile.getSize();
+            long localFileSize = 0;
+            int alreadyPrinted = 0;
+            
             //download file via buffer
             OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile));
             InputStream inputStream = ftpClient.retrieveFileStream(file);
-            byte[] bytesArray = new byte[4096];
+            byte[] bytesArray = new byte[24];
             int bytesRead = -1;
             while ((bytesRead = inputStream.read(bytesArray)) != -1) {
                 outputStream.write(bytesArray, 0, bytesRead);
+                localFileSize += 24;
+                alreadyPrinted = printProgBar((int)(((localFileSize/(double)serverFileSize))*100), alreadyPrinted);
             }
  
             boolean success = ftpClient.completePendingCommand();
             if (success) {
-                System.out.println("downloaded: "+ downloadFile.getName());
+                System.out.println("\ndownloaded: "+ downloadFile.getName());
             }
             outputStream.close();
             inputStream.close();
