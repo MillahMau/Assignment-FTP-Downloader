@@ -32,6 +32,15 @@ public class FileProcessor {
     		showHelp();
     	else if (args[0].equals("-about"))
     		showAbout();
+    	else if (args[0].equals("-unzip"))
+    		unzip(args[1], args[2]);
+    	else if (args[0].equals("-download"))
+    		download(args[1],Integer.parseInt(args[2]),args[3],args[4],args[5],args[6]);
+    	else if (args[0].equals("-processCSV"))
+    		newCSVWithFilteredRows(args[1]);
+    	else if (args[0].equals("-createDir"))
+    		createDirectoryIfNotExist(args[1]);
+    	
     	else
     		System.out.println("Unknown command. use -help to show command list");
     	}
@@ -41,7 +50,17 @@ public class FileProcessor {
     	 * prints all available commands of the program and an explanation
     	 */
     	System.out.println("-output: downloads a specific zip-file, unzip its CSV in /backup/ process the CSV, so all lines with ID over 6500000 are deleted and store it as <date>.csv.\n Paramter: Path to destination of download.");
+    	System.out.println();
+    	System.out.println("-unzip: unzips a file. Parameters: String location of zip-File; String destination of content of zip-file");
+    	System.out.println();
+    	System.out.println("-download: download a FTP file. Parameters: String server; Int port; String user; String password; String path to store; String file to download");
+    	System.out.println();
+    	System.out.println("-processCSV: creates a new CSV, with missing rows where first cell is lower than 650000. Parameters: String location of CSV file");
+    	System.out.println();
+    	System.out.println("-createDir: creates a directory if not exists. Parameter: String complete Path of directory");
+    	System.out.println();
     	System.out.println("-about: shows information about the programm");
+    	System.out.println();
     	System.out.println("-help: shows all available parameters");
     }
     
@@ -85,18 +104,22 @@ public class FileProcessor {
     	
     	download(server, port, user, pass, backupPath, file);
     	unzip(combinePaths(backupPath,file), backupPath);
-    	newCSVWithFilteredRows("C:/Users/Sophie/workspace/FTP Downloader and Processor/temp/backup/FTP File Downloader and Processor example file.csv");
+    	newCSVWithFilteredRows(combinePaths(backupPath,file));
     }
     
-    public static int printProgBar(int percent, int alreadyPrinted){
+    public static int printProgBar(int percent, int alreadyPrinted, int max){
     	/*
     	 * prints # as a progress bar. if finished, print 100%.
     	 * 
     	 * @param percent the current percentage the progress file should display
     	 * @param alreadyPrinted counter, how much # are printed. has to be maintained
+    	 * @param max defines the maximal characters of the progress bar
     	 * @return the updated alreadyPrinted counter
     	 */
-    	int max = 30;
+    	
+    	if(percent>= 100){
+    		percent = 100;
+    	}
     	
     	while (percent > (alreadyPrinted/max)*100){
         	System.out.print("#");
@@ -106,6 +129,8 @@ public class FileProcessor {
     	if(percent>= 100){
     		System.out.println(" 100%");
     	}
+		
+
     	return alreadyPrinted;
     }
     
@@ -229,26 +254,39 @@ public class FileProcessor {
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             
+            //get the file size of the file to download
             FTPFile serverFile = ftpClient.mlistFile(file);
             long serverFileSize = serverFile.getSize();
             long localFileSize = 0;
+            //a variable for the progressbar printing
             int alreadyPrinted = 0;
+            
+            //choose the maximal characters of the progress bar
+            int maxProgressBarCharacters = 30;
+            
+            //choose a package size which enables reasonable printing in the progressbar (one can argue about this, because little packages need longer. But in this case we want a fancy progress bar :))
+            int packageSize = (int)serverFileSize/maxProgressBarCharacters;
+            
+            //but not too big or too small
+            if (packageSize > 4096) {
+            	packageSize = 4096;
+            } else if (packageSize < 512){
+            	packageSize = 512;
+            }
             
             //download file via buffer
             OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile));
             InputStream inputStream = ftpClient.retrieveFileStream(file);
-            byte[] bytesArray = new byte[24];
+            byte[] bytesArray = new byte[packageSize];
             int bytesRead = -1;
             while ((bytesRead = inputStream.read(bytesArray)) != -1) {
                 outputStream.write(bytesArray, 0, bytesRead);
-                localFileSize += 24;
-                alreadyPrinted = printProgBar((int)(((localFileSize/(double)serverFileSize))*100), alreadyPrinted);
+                localFileSize += packageSize;
+                alreadyPrinted = printProgBar((int)(((localFileSize/(double)serverFileSize))*100), alreadyPrinted, maxProgressBarCharacters);
             }
  
-            boolean success = ftpClient.completePendingCommand();
-            if (success) {
-                System.out.println("\ndownloaded: "+ downloadFile.getName());
-            }
+            System.out.println("\ndownloaded: "+ downloadFile.getName());
+            
             outputStream.close();
             inputStream.close();
  
