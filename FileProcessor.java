@@ -102,7 +102,10 @@ public class FileProcessor {
     	/**
     	 * prints about information
     	 */
-    	System.out.println("© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git");
+    	System.out.println("© 2016, Millah, https://github.com/MillahMau/Assignment-FTP-Downloader.git\n"
+    			+ "     External Liberaries used:\n"
+    			+ "         commons-net-3.0.1\n"
+    			+ "         zip4j_1.3.2");
     }
     
     public static void startProgram(String path){
