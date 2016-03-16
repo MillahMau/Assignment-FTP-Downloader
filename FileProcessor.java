@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,9 +21,7 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
- * 
- * @author Sophie
- *
+ * @author Millah
  */
 public class FileProcessor {
     public static void main(String[] args) {
@@ -59,24 +58,24 @@ public class FileProcessor {
     	 */
     	System.out.println(
     				"NAME: FileProcessor\n\n"
-				+ 	"\n"
-    			+	"Parameters:\n"
-				+ 	"    -output FILE:\n"
-				+   "        downloads a specific zip-file, unzip its CSV in /backup/, copy the\n"
-    			+ 	"        CSV as <date>.csv. Only the lines where the ID in the first cell is\n"
-    			+	"        bigger or equal than 6500000 are copied and stored.\n"
-    			+ 	"        Paramters:\n"
-    			+ 	"            FILE: Path to destination of download.\n\n"
-    			+	"    -unzip FILE FOLDER:\n"
-    			+ 	"        unzips the file to the folder \n"
-    			+ 	"        Parameters: \n"
-    			+ 	"            FILE: Location of the zip file \n"
+                +   "\n"
+                +   "Parameters:\n"
+                +   "    -output FILE:\n"
+                +   "        downloads a specific zip file, unzip its CSV in /backup/, copy the\n"
+    			+   "        CSV as <date>.csv. Only the lines where the ID in the first cell is\n"
+    			+   "        bigger or equal than 6500000 are copied and stored.\n"
+    			+   "        Paramters:\n"
+    			+   "            FILE: Path to destination of download.\n\n"
+    			+   "    -unzip FILE FOLDER:\n"
+    			+   "        unzips the file to the folder \n"
+    			+   "        Parameters: \n"
+    			+   "            FILE: Location of the zip file \n"
     			+   "            FOLDER: Destination to extract the content of the zipp file to\n\n"
 	    		+   "    -download SERVER PORT USER PW FOLDER FILE\n"
-	    		+ 	"        download a FTP file.\n"
+	    		+   "        download a FTP file.\n"
 	    		+   "        Parameters:\n"
-	    		+   "            SERVER: server\n"
-	    		+   "            PORT: port\n"
+	    		+   "            SERVER: server IP or name to download from \n"
+	    		+   "            PORT: port ftp server listens on\n"
 	    		+   "            USER: username\n"
 	    		+   "            PW: password\n"
 	    		+   "            FOLDER: path where the downloaded file should be stored\n"
@@ -86,13 +85,13 @@ public class FileProcessor {
 	    		+   "        copied, which first cells are bigger or equal than 6500000.\n"
 	    		+   "        Parameters:\n"
 	    		+   "            FILE: location of original CSV file\n\n"
-	    		+	"    -createDir FOLDER:\n"
+	    		+   "    -createDir FOLDER:\n"
 	    		+   "        creates a directory if it does not exist, yet.\n"
 	    		+   "        Parameter:\n"
 	    		+   "            FOLDER: complete Path of directory\n\n"
-	    		+	"    -about:\n"
+	    		+   "    -about:\n"
 	    		+   "        shows information about the programm\n\n"
-	    		+	"    -help:\n"
+	    		+   "    -help:\n"
 	    		+   "        shows this help");
     }
     
@@ -119,7 +118,6 @@ public class FileProcessor {
     	 * a new file is created, where all rows, which cells in the first coloumn are lower than 6500000 are not copied.
     	 * store the new file as <date>.csv
     	 * 
-    	 * 
     	 * @param path destination path to download
     	 */
     	
@@ -130,13 +128,14 @@ public class FileProcessor {
         String pass = "WtdyYSkrvzT5hErd";
         
     	String file = "FTP File Downloader and Processor example file.zip";
+    	String unpackedFile = "FTP File Downloader and Processor example file.csv";
     	String backupPath = combinePaths(path, "backup"); 
 
     	createDirectoryIfNotExist(backupPath);
     	
     	download(server, port, user, pass, backupPath, file);
     	unzip(combinePaths(backupPath,file), backupPath);
-    	newCSVWithFilteredRows(combinePaths(backupPath,file));
+    	newCSVWithFilteredRows(combinePaths(backupPath,unpackedFile));
     }
     
     public static int printProgBar(int percent, int alreadyPrinted, int max){
@@ -149,15 +148,18 @@ public class FileProcessor {
     	 * @return the updated alreadyPrinted counter
     	 */
     	
+    	//prevents to many #
     	if(percent>= 100){
     		percent = 100;
     	}
     	
+    	//compare already printed percent with wanted percent. Prints #, if wanted percent is reaches
     	while (percent > (alreadyPrinted/max)*100){
         	System.out.print("#");
         	alreadyPrinted++;
     	}
     	
+    	//indicates complete download
     	if(percent>= 100){
     		System.out.println(" 100%");
     	}
@@ -181,8 +183,13 @@ public class FileProcessor {
     	
     	BufferedReader reader;
     	String line = null;
+    	
     	//creates the new file with the name <date>.csv at the same location of the old file
-    	String newpath = path.substring(0, path.lastIndexOf('/')) +"/" +dateFormat.format(date) + ".csv";
+    	String newpath = "";
+    	if (path.contains(File.separator))
+    		newpath = path.substring(0, path.lastIndexOf(File.separator)) + File.separator;
+    	newpath += dateFormat.format(date) + ".csv";
+    	
     	FileWriter writer = null;
     	System.out.println("create new CSV: "+ newpath);
     	
@@ -248,12 +255,12 @@ public class FileProcessor {
     	 * @param path1 first part of path
     	 * @param path2 second part of path
     	 */
-        return new File(path1, path2).getPath();
+        return Paths.get(path1, path2).toString();
     }
     
     public static void unzip(String source, String dest) {
     	/*
-    	 * unzips a file
+    	 * unzips a file to a folder
     	 * 
     	 * @param source path to the zip file
     	 * @param dest path where the files in the zip should be put
@@ -296,6 +303,7 @@ public class FileProcessor {
             FTPFile serverFile = ftpClient.mlistFile(file);
             long serverFileSize = serverFile.getSize();
             long localFileSize = 0;
+            
             //a variable for the progress bar printing
             int alreadyPrinted = 0;
             
@@ -312,13 +320,16 @@ public class FileProcessor {
             	packageSize = 512;
             }
             
-            //download file via buffer
+            //download file via streams
             OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile));
             InputStream inputStream = ftpClient.retrieveFileStream(file);
             byte[] bytesArray = new byte[packageSize];
             int bytesRead = -1;
+            
+            //download package wise
             while ((bytesRead = inputStream.read(bytesArray)) != -1) {
                 outputStream.write(bytesArray, 0, bytesRead);
+                //calculations for progress bar
                 localFileSize += packageSize;
                 alreadyPrinted = printProgBar((int)(((localFileSize/(double)serverFileSize))*100), alreadyPrinted, maxProgressBarCharacters);
             }
